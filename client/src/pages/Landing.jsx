@@ -31,7 +31,7 @@ export default function Home() {
               <p className="text-[10px] text-slate-400 font-medium">
                 SMART Journey
               </p>
-            </div>
+    </div>
           </Link>
 
 
