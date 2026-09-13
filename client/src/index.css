@@ -1,0 +1,1016 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================
+   GLOBAL RESET
+===================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* =====================================================
+   PROFESSIONAL CARD
+===================================================== */
+
+.pro-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  transition: all 0.3s ease;
+}
+
+.pro-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+}
+
+/* =====================================================
+   PROFESSIONAL INPUT
+===================================================== */
+
+.pro-input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  background: white;
+  color: #0f172a;
+  transition: all 0.25s ease;
+}
+
+.pro-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* =====================================================
+   PROFESSIONAL BUTTON
+===================================================== */
+
+.pro-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.pro-button:hover {
+  transform: translateY(-2px);
+}
+
+.pro-button:active {
+  transform: scale(0.97);
+}
+
+/* =====================================================
+   GRADIENT TEXT
+===================================================== */
+
+.gradient-text {
+  background: linear-gradient(
+    90deg,
+    #2563eb,
+    #7c3aed
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =====================================================
+   GLASS EFFECT
+===================================================== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* =====================================================
+   PAGE CONTAINER
+===================================================== */
+
+.page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .pro-card {
+    border-radius: 16px;
+  }
+}
+/* =========================================================
+   RIDE BACK LOGIN PAGE
+   ========================================================= */
+
+.rb-login-page {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(37, 99, 235, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(124, 58, 237, 0.12),
+      transparent 30%
+    ),
+    #f8fafc;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+
+  position: relative;
+  overflow: hidden;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* BACKGROUND CIRCLES */
+
+.rb-bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.rb-bg-circle-1 {
+  width: 400px;
+  height: 400px;
+
+  background: rgba(37, 99, 235, 0.07);
+
+  top: -180px;
+  left: -180px;
+}
+
+.rb-bg-circle-2 {
+  width: 450px;
+  height: 450px;
+
+  background: rgba(124, 58, 237, 0.06);
+
+  right: -200px;
+  bottom: -200px;
+}
+
+
+/* MAIN CONTAINER */
+
+.rb-login-container {
+  width: 100%;
+  max-width: 1150px;
+
+  min-height: 680px;
+
+  background: white;
+
+  border-radius: 28px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 25px 70px rgba(15, 23, 42, 0.12);
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  position: relative;
+  z-index: 2;
+}
+
+
+/* =========================================================
+   LEFT SIDE
+   ========================================================= */
+
+.rb-login-info {
+  position: relative;
+
+  background:
+    linear-gradient(
+      145deg,
+      #2563eb 0%,
+      #4338ca 55%,
+      #4f46e5 100%
+    );
+
+  color: white;
+
+  padding: 48px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+
+/* decorative circles */
+
+.rb-login-info::before {
+  content: "";
+
+  position: absolute;
+
+  width: 320px;
+  height: 320px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  right: -150px;
+  top: 100px;
+}
+
+.rb-login-info::after {
+  content: "";
+
+  position: absolute;
+
+  width: 450px;
+  height: 450px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  left: -280px;
+  bottom: -250px;
+}
+
+
+/* BRAND */
+
+.rb-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  text-decoration: none;
+
+  color: white;
+
+  position: relative;
+  z-index: 3;
+}
+
+.rb-brand-logo {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 14px;
+
+  background: white;
+
+  color: #2563eb;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 25px;
+  font-weight: 900;
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.15);
+}
+
+.rb-brand-name {
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.rb-brand-subtitle {
+  font-size: 9px;
+  letter-spacing: 2px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+
+/* LEFT CONTENT */
+
+.rb-info-content {
+  margin-top: auto;
+  margin-bottom: auto;
+
+  position: relative;
+  z-index: 2;
+
+  max-width: 480px;
+}
+
+.rb-small-badge {
+  display: inline-flex;
+
+  align-items: center;
+  gap: 9px;
+
+  padding: 8px 14px;
+
+  background: rgba(255,255,255,0.12);
+
+  border: 1px solid rgba(255,255,255,0.15);
+
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  margin-bottom: 25px;
+}
+
+.rb-online-dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #4ade80;
+
+  box-shadow:
+    0 0 0 4px rgba(74,222,128,0.15);
+}
+
+.rb-info-content h1 {
+  font-size: 47px;
+
+  line-height: 1.08;
+
+  font-weight: 800;
+
+  letter-spacing: -1.5px;
+
+  margin: 0;
+}
+
+.rb-info-content h1 span {
+  color: #bfdbfe;
+}
+
+.rb-info-content > p {
+  color: rgba(255,255,255,0.78);
+
+  font-size: 17px;
+
+  line-height: 1.7;
+
+  margin-top: 22px;
+
+  max-width: 440px;
+}
+
+
+/* FEATURES */
+
+.rb-feature-list {
+  margin-top: 35px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.rb-feature {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+.rb-feature-icon {
+  width: 44px;
+  height: 44px;
+
+  border-radius: 13px;
+
+  background: rgba(255,255,255,0.12);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 20px;
+
+  flex-shrink: 0;
+}
+
+.rb-feature strong {
+  display: block;
+
+  font-size: 14px;
+}
+
+.rb-feature p {
+  margin: 3px 0 0;
+
+  font-size: 12px;
+
+  color: rgba(255,255,255,0.65);
+}
+
+
+/* =========================================================
+   RIGHT SIDE
+   ========================================================= */
+
+.rb-login-card-wrapper {
+  background: white;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 50px;
+}
+
+.rb-login-card {
+  width: 100%;
+  max-width: 430px;
+}
+
+
+/* MOBILE BRAND */
+
+.rb-mobile-logo {
+  display: none;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 30px;
+
+  color: #0f172a;
+}
+
+.rb-mobile-logo .rb-brand-logo {
+  background: #2563eb;
+  color: white;
+}
+
+
+/* HEADING */
+
+.rb-login-heading {
+  margin-bottom: 28px;
+}
+
+.rb-login-heading h2 {
+  margin: 0;
+
+  font-size: 34px;
+
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  color: #0f172a;
+
+  letter-spacing: -0.7px;
+}
+
+.rb-login-heading p {
+  margin: 8px 0 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   ALERTS
+   ========================================================= */
+
+.rb-alert {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 12px 14px;
+
+  border-radius: 12px;
+
+  font-size: 13px;
+
+  margin-bottom: 20px;
+}
+
+.rb-alert-error {
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border: 1px solid #fecaca;
+}
+
+.rb-alert-success {
+  background: #f0fdf4;
+
+  color: #15803d;
+
+  border: 1px solid #bbf7d0;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.rb-form-group {
+  margin-bottom: 20px;
+}
+
+.rb-form-group label {
+  display: block;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  color: #334155;
+
+  margin-bottom: 8px;
+}
+
+.rb-label-row {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+}
+
+.rb-forgot {
+  font-size: 12px;
+
+  color: #2563eb;
+
+  font-weight: 600;
+}
+
+
+/* INPUT */
+
+.rb-input-wrapper {
+  position: relative;
+}
+
+.rb-input-icon {
+  position: absolute;
+
+  left: 14px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 16px;
+
+  z-index: 2;
+}
+
+.rb-input-wrapper input {
+  width: 100%;
+
+  height: 52px;
+
+  padding:
+    0 15px 0 45px;
+
+  border:
+    1px solid #cbd5e1;
+
+  border-radius: 12px;
+
+  background: #fff;
+
+  color: #0f172a;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+
+  box-sizing: border-box;
+}
+
+.rb-input-wrapper input::placeholder {
+  color: #94a3b8;
+}
+
+.rb-input-wrapper input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,0.10);
+
+  background: white;
+}
+
+
+/* =========================================================
+   ROLE SELECTOR
+   ========================================================= */
+
+.rb-role-container {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+}
+
+.rb-role {
+  position: relative;
+
+  border: 1px solid #e2e8f0;
+
+  background: white;
+
+  border-radius: 14px;
+
+  padding: 13px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+
+  color: #334155;
+}
+
+.rb-role:hover {
+  border-color: #93c5fd;
+
+  background: #f8fbff;
+}
+
+.rb-role.active {
+  border-color: #2563eb;
+
+  background: #eff6ff;
+
+  box-shadow:
+    0 0 0 1px #2563eb;
+}
+
+.rb-role.active.rider {
+  border-color: #059669;
+
+  background: #ecfdf5;
+
+  box-shadow:
+    0 0 0 1px #059669;
+}
+
+.rb-role-icon {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 10px;
+
+  background: #f1f5f9;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+
+  flex-shrink: 0;
+}
+
+.rb-role.active .rb-role-icon {
+  background: #dbeafe;
+}
+
+.rb-role.active.rider .rb-role-icon {
+  background: #d1fae5;
+}
+
+.rb-role strong {
+  display: block;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+.rb-role small {
+  display: block;
+
+  margin-top: 2px;
+
+  font-size: 10px;
+
+  color: #64748b;
+}
+
+.rb-check {
+  position: absolute;
+
+  right: 8px;
+  top: 8px;
+
+  width: 17px;
+  height: 17px;
+
+  border-radius: 50%;
+
+  background: #2563eb;
+
+  color: white;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.rb-role.active.rider .rb-check {
+  background: #059669;
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+   ========================================================= */
+
+.rb-login-button {
+  width: 100%;
+
+  height: 54px;
+
+  border: none;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #4f46e5
+    );
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  box-shadow:
+    0 10px 25px rgba(37,99,235,0.22);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.rb-login-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 14px 30px rgba(37,99,235,0.30);
+}
+
+.rb-login-button:active {
+  transform: translateY(0);
+}
+
+.rb-login-button:disabled {
+  opacity: 0.7;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* SPINNER */
+
+.rb-spinner {
+  width: 17px;
+  height: 17px;
+
+  border:
+    2px solid rgba(255,255,255,0.35);
+
+  border-top-color: white;
+
+  border-radius: 50%;
+
+  animation:
+    rb-spin 0.7s linear infinite;
+}
+
+@keyframes rb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* REGISTER */
+
+.rb-register-text {
+  text-align: center;
+
+  margin-top: 25px;
+
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+.rb-register-text a {
+  color: #2563eb;
+
+  font-weight: 800;
+
+  text-decoration: none;
+
+  margin-left: 5px;
+}
+
+.rb-register-text a:hover {
+  text-decoration: underline;
+}
+
+
+/* SECURITY */
+
+.rb-security {
+  text-align: center;
+
+  margin-top: 25px;
+
+  padding-top: 20px;
+
+  border-top: 1px solid #f1f5f9;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .rb-login-container {
+    grid-template-columns: 1fr;
+
+    max-width: 520px;
+
+    min-height: auto;
+  }
+
+  .rb-login-info {
+    display: none;
+  }
+
+  .rb-login-card-wrapper {
+    padding: 40px 30px;
+  }
+
+  .rb-mobile-logo {
+    display: flex;
+  }
+}
+
+
+@media (max-width: 520px) {
+
+  .rb-login-page {
+    padding: 0;
+
+    align-items: stretch;
+  }
+
+  .rb-login-container {
+    min-height: 100vh;
+
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .rb-login-card-wrapper {
+    padding: 30px 20px;
+  }
+
+  .rb-login-heading h2 {
+    font-size: 29px;
+  }
+
+  .rb-role-container {
+    grid-template-columns: 1fr;
+  }
+}
