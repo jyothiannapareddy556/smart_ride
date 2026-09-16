@@ -29,7 +29,7 @@ export default function Home() {
               </h1>
 
               <p className="text-[10px] text-slate-400 font-medium">
-                SMART Journey
+                Smart Journey
               </p>
     </div>
           </Link>
