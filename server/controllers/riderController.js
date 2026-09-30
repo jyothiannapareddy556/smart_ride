@@ -15,6 +15,37 @@ const getPendingRides = async (req, res) => {
       });
     }
 
+    // ----------------------------------------------------
+    // CHECK RIDER AND ONLINE STATUS
+    // ----------------------------------------------------
+
+    const { rows: riderRows } = await db.query(
+      `
+      SELECT id, role, availability
+      FROM users
+      WHERE id = $1
+      AND role = 'rider'
+      `,
+      [riderId]
+    );
+
+    if (riderRows.length === 0) {
+      return res.status(404).json({
+        message: "Rider not found",
+      });
+    }
+
+    const rider = riderRows[0];
+
+    // Offline riders must not receive new requests
+    if (rider.availability === "offline") {
+  return res.status(200).json([]);
+}
+
+    // ----------------------------------------------------
+    // GET RIDES
+    // ----------------------------------------------------
+
     const { rows: rides } = await db.query(
       `
       SELECT
@@ -44,11 +75,12 @@ const getPendingRides = async (req, res) => {
       WHERE
         (
           b.status = 'pending'
-          OR
-          (
-            b.status IN ('accepted', 'ongoing')
-            AND b.rider_id = $1
-          )
+          AND b.rider_id = $1
+        )
+        OR
+        (
+          b.status IN ('accepted', 'ongoing')
+          AND b.rider_id = $1
         )
 
       ORDER BY b.booking_date DESC

@@ -113,11 +113,17 @@ export default function RiderDashboard() {
   // LOAD RIDES
   // =====================================================
 
-  useEffect(() => {
-    if (user) {
-      fetchRides();
-    }
-  }, [user]);
+ useEffect(() => {
+  if (!user) return;
+
+  fetchRides();
+
+  const interval = setInterval(() => {
+    fetchRides();
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [user]);
 
   const fetchRides = async () => {
     try {
@@ -407,6 +413,12 @@ setRides(res.data || []);
               current_location: location,
             }
           );
+          await api.put(
+            "/rider/online",
+            {
+                rider_id: Number(user.id),
+            }
+        );
 
           setCurrentLocation(location);
 

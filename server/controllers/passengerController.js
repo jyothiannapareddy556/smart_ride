@@ -701,8 +701,8 @@ const getAcceptedRide = async (req, res) => {
                 AND b.status IN
                 (
                     'accepted',
-                    'ongoing',
-                    'completed'
+                    'ongoing'
+                    
                 )
 
                 AND b.id =
@@ -717,8 +717,7 @@ const getAcceptedRide = async (req, res) => {
                         AND b2.status IN
                         (
                             'accepted',
-                            'ongoing',
-                            'completed'
+                            'ongoing'
                         )
                 )
 
