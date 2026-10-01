@@ -35,6 +35,7 @@ const PassengerDashboard = () => {
     // ============================================================
 
     const [acceptedRide, setAcceptedRide] = useState(null);
+    console.log("ACCEPTED RIDE DATA:", acceptedRide);
 
     // ============================================================
     // FARE
@@ -4254,10 +4255,12 @@ const handleOnlinePayment = async () => {
 
                                             <div className="rb-distance-value">
                                                 {distance
-                                                    ? `${distance} KM`
-                                                    : calculatingFare
-                                                    ? "Calculating..."
-                                                    : "Distance unavailable"}
+                                                ? `${distance} KM`
+                                                : acceptedRide?.distance_km
+                                                ? `${Number(acceptedRide.distance_km).toFixed(2)} KM`
+                                                : calculatingFare
+                                                ? "Calculating..."
+                                                : "Distance unavailable"}
                                             </div>
 
                                         </div>

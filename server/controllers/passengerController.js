@@ -218,7 +218,12 @@ const bookRide = async (req, res) => {
         if (hasCoordinates) {
 
             try {
-
+                console.log("ROUTE COORDINATES:", {
+                        pickup_lat,
+                        pickup_lng,
+                        drop_lat,
+                        drop_lng
+                    });
                 distanceKm =
                     await getRoadDistance(
                         pickup_lat,
