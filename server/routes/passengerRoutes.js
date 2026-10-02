@@ -1,5 +1,4 @@
 const express = require("express");
-
 const {
     bookRide,
     requestRide,
@@ -7,7 +6,8 @@ const {
     getAcceptedRide,
     calculateFare,
     updatePaymentMethod,
-    completeCashPayment
+    completeCashPayment,
+    submitRating
 } = require("../controllers/passengerController");
 
 const router = express.Router();
@@ -87,6 +87,16 @@ router.put(
 router.put(
     "/cash-payment",
     completeCashPayment
+);
+
+// ============================================================
+// SUBMIT RIDER RATING
+// POST /api/rides/rating
+// ============================================================
+
+router.post(
+    "/rating",
+    submitRating
 );
 
 

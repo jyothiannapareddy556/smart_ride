@@ -1101,18 +1101,205 @@ setRides(res.data || []);
               ) : (
                 rideHistory.map((ride) => (
                   <div className="rb-card rb-history-card" key={ride.id}>
-                    <div className="rb-history-top">
-                      <div><div className="rb-muted">BOOKING #{ride.id}</div><div className="rb-title">{ride.passenger_name}</div><div className="rb-muted">📞 {ride.passenger_phone}</div></div>
-                      <span className={`rb-status ${ride.status}`}>● {ride.status}</span>
-                    </div>
-                    <div className="rb-route-box"><div className="rb-route-grid"><div><div className="rb-route-label">PICKUP</div><div className="rb-route-value">📍 {ride.pickup_location}</div></div><div><div className="rb-route-label">DESTINATION</div><div className="rb-route-value">🏁 {ride.drop_location}</div></div></div></div>
-                    <div className="rb-meta-grid">
-                      <div className="rb-meta"><div className="rb-route-label">DISTANCE</div><strong>{ride.distance_km ? `${ride.distance_km} km` : "—"}</strong></div>
-                      <div className="rb-meta"><div className="rb-route-label">FARE</div><strong>{ride.final_fare ? `₹${Number(ride.final_fare).toFixed(2)}` : "—"}</strong></div>
-                      <div className="rb-meta"><div className="rb-route-label">PAYMENT</div><strong style={{textTransform:"capitalize"}}>{ride.payment_method || "—"}</strong></div>
-                      <div className="rb-meta"><div className="rb-route-label">PAYMENT STATUS</div><strong style={{color:ride.payment_status === "paid" ? "#059669" : "#ca8a04",textTransform:"capitalize"}}>{ride.payment_status || "pending"}</strong></div>
-                    </div>
-                  </div>
+
+    {/* HEADER */}
+    <div className="rb-history-top">
+        <div>
+            <div className="rb-muted">
+                BOOKING #{ride.id}
+            </div>
+
+            <div className="rb-title">
+                {ride.passenger_name}
+            </div>
+
+            <div className="rb-muted">
+                📞 {ride.passenger_phone}
+            </div>
+        </div>
+
+        <span className={`rb-status ${ride.status}`}>
+            ● {ride.status}
+        </span>
+    </div>
+
+    {/* ROUTE */}
+    <div className="rb-route-box">
+        <div className="rb-route-grid">
+
+            <div>
+                <div className="rb-route-label">
+                    PICKUP
+                </div>
+
+                <div className="rb-route-value">
+                    📍 {ride.pickup_location}
+                </div>
+            </div>
+
+            <div>
+                <div className="rb-route-label">
+                    DESTINATION
+                </div>
+
+                <div className="rb-route-value">
+                    🏁 {ride.drop_location}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {/* RIDE DETAILS */}
+    <div className="rb-meta-grid">
+
+        <div className="rb-meta">
+            <div className="rb-route-label">
+                DISTANCE
+            </div>
+            <strong>
+                {ride.distance_km
+                    ? `${ride.distance_km} km`
+                    : "—"}
+            </strong>
+        </div>
+
+        <div className="rb-meta">
+            <div className="rb-route-label">
+                PASSENGERS
+            </div>
+            <strong>
+                {ride.passengers || 1}
+            </strong>
+        </div>
+
+        <div className="rb-meta">
+            <div className="rb-route-label">
+                FARE
+            </div>
+            <strong>
+                {ride.final_fare
+                    ? `₹${Number(ride.final_fare).toFixed(2)}`
+                    : "—"}
+            </strong>
+        </div>
+
+        <div className="rb-meta">
+            <div className="rb-route-label">
+                PAYMENT
+            </div>
+            <strong style={{ textTransform: "capitalize" }}>
+                {ride.payment_method || "—"}
+            </strong>
+        </div>
+
+        <div className="rb-meta">
+            <div className="rb-route-label">
+                PAYMENT STATUS
+            </div>
+
+            <strong
+                style={{
+                    color:
+                        ride.payment_status === "paid"
+                            ? "#059669"
+                            : "#ca8a04",
+                    textTransform: "capitalize"
+                }}
+            >
+                {ride.payment_status || "pending"}
+            </strong>
+        </div>
+
+        <div className="rb-meta">
+            <div className="rb-route-label">
+                DATE & TIME
+            </div>
+
+            <strong>
+                {ride.booking_date
+                    ? new Date(ride.booking_date).toLocaleString()
+                    : "—"}
+            </strong>
+        </div>
+
+    </div>
+
+    {/* PASSENGER REVIEW */}
+    {ride.rider_rating ? (
+        <div
+            style={{
+                marginTop: "18px",
+                padding: "18px",
+                borderRadius: "16px",
+                background: "#fffbeb",
+                border: "1px solid #fde68a"
+            }}
+        >
+            <div
+                style={{
+                    fontSize: "12px",
+                    fontWeight: "800",
+                    color: "#92400e",
+                    marginBottom: "8px",
+                    letterSpacing: ".04em"
+                }}
+            >
+                PASSENGER FEEDBACK
+            </div>
+
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "8px"
+                }}
+            >
+                <span
+                    style={{
+                        fontSize: "20px",
+                        letterSpacing: "2px"
+                    }}
+                >
+                    {"★".repeat(Number(ride.rider_rating))}
+                    {"☆".repeat(5 - Number(ride.rider_rating))}
+                </span>
+
+                <strong>
+                    {ride.rider_rating}/5
+                </strong>
+            </div>
+
+            {ride.rider_review && (
+                <div
+                    style={{
+                        color: "#475569",
+                        fontSize: "14px",
+                        lineHeight: "1.5"
+                    }}
+                >
+                    💬 "{ride.rider_review}"
+                </div>
+            )}
+        </div>
+    ) : (
+        <div
+            style={{
+                marginTop: "18px",
+                padding: "14px 16px",
+                borderRadius: "14px",
+                background: "#f8fafc",
+                color: "#64748b",
+                fontSize: "13px"
+            }}
+        >
+            ⭐ Passenger has not submitted a rating yet.
+        </div>
+    )}
+
+</div>
+                  
                 ))
               )}
             </section>

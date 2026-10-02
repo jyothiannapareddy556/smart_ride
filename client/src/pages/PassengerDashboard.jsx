@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PassengerMap from "../components/PassengerMap";
 
+
 const PassengerDashboard = () => {
     const navigate = useNavigate();
 
@@ -34,7 +35,17 @@ const PassengerDashboard = () => {
     // ACCEPTED RIDE
     // ============================================================
     const [rideStatus, setRideStatus] = useState("accepted");
+
+    
     const [acceptedRide, setAcceptedRide] = useState(null);
+
+    const acceptedNotificationShownRef = useRef(false);
+
+    const startedNotificationShownRef = useRef(false);
+
+    const completedNotificationShownRef = useRef(false);
+
+   
     console.log("ACCEPTED RIDE DATA:", acceptedRide);
 
     // ============================================================
@@ -52,6 +63,17 @@ const PassengerDashboard = () => {
     const [paymentMethod, setPaymentMethod] = useState("");
     const [paymentStatus, setPaymentStatus] = useState("pending");
     const [paymentLoading, setPaymentLoading] = useState(false);
+
+    //==========================================================
+    // REVIEW
+    //==========================================================
+
+    const [rating, setRating] = useState(0);
+    const [review, setReview] = useState("");
+    const [ratingSubmitting, setRatingSubmitting] = useState(false);
+    const [ratingSubmitted, setRatingSubmitted] = useState(false);
+
+
     // ============================================================
 // PROFESSIONAL NOTIFICATION
 // ============================================================
@@ -95,6 +117,12 @@ const showNotification = (
         title: notificationTitle,
         message: notificationMessage
     });
+
+    showToast(
+    notificationMessage,
+    type,
+    notificationTitle
+);
 
     setTimeout(() => {
         setNotification((previous) => ({
@@ -251,8 +279,31 @@ useEffect(() => {
                             ride
                         );
 
+                        console.log(
+    "NOTIFICATION CHECK:",
+    "ride.status =", ride.status,
+    "previous status =", acceptedRide?.status
+);
+
+                       if (
+    ride.status === "accepted" &&
+    !acceptedNotificationShownRef.current
+) {
+    console.log("🔔 RIDE ACCEPTED NOTIFICATION TRIGGERED");
+
+    showNotification(
+        "success",
+        "Ride Accepted",
+        "Your rider has accepted your ride and is on the way."
+    );
+
+    acceptedNotificationShownRef.current = true;
+}
+
                         setAcceptedRide(ride);
                         setRideStatus(ride.status);
+
+                      
 
                         const currentBookingId =
                             ride.booking_id || ride.id;
@@ -367,6 +418,18 @@ useEffect(() => {
             );
             setRideStatus(currentRide.status);
 
+            if (
+    currentRide.status === "ongoing" &&
+    !startedNotificationShownRef.current
+) {
+    showNotification(
+        "info",
+        "Ride Started",
+        "Your rider has started the ride."
+    );
+
+    startedNotificationShownRef.current = true;
+}
             // ----------------------------------------------------
             // RIDER COMPLETED THE RIDE
             // ----------------------------------------------------
@@ -378,6 +441,18 @@ useEffect(() => {
                     "✅ RIDE COMPLETED:",
                     currentRide
                 );
+
+                if (!completedNotificationShownRef.current) {
+
+                    console.log("🔔 RIDE COMPLETED NOTIFICATION TRIGGERED");
+    showNotification(
+        "success",
+        "Ride Completed",
+        "Your ride has been completed successfully."
+    );
+
+    completedNotificationShownRef.current = true;
+}
 
                 setAcceptedRide(currentRide);
                 setRideStatus(currentRide.status);
@@ -1018,7 +1093,12 @@ useEffect(() => {
                 );
 
                 setCalculatingFare(true);
-
+                console.log("FARE COORDINATES:", {
+                    pickup_lat: acceptedRide.pickup_lat,
+                    pickup_lng: acceptedRide.pickup_lng,
+                    drop_lat: acceptedRide.drop_lat,
+                    drop_lng: acceptedRide.drop_lng
+                });
                 roadDistance =
                     await calculateRouteDistance(
                         acceptedRide.pickup_lat,
@@ -1446,6 +1526,71 @@ const handleOnlinePayment = async () => {
         );
 
         setPaymentLoading(false);
+    }
+};
+ 
+//===========================================
+// REVIEW
+//============================================
+
+const handleSubmitRating = async () => {
+    if (!bookingId) {
+        showToast(
+            "Booking ID not found.",
+            "error"
+        );
+        return;
+    }
+
+    if (!rating) {
+        showToast(
+            "Please select a rating.",
+            "warning"
+        );
+        return;
+    }
+
+    try {
+        setRatingSubmitting(true);
+
+        const response = await api.post(
+            "/rides/rating",
+            {
+                booking_id: bookingId,
+                rider_rating: rating,
+                rider_review: review
+            }
+        );
+
+        console.log(
+            "RATING RESPONSE:",
+            response.data
+        );
+
+        setRatingSubmitted(true);
+
+        showToast(
+            "Thank you for rating your rider.",
+            "success",
+            "Rating Submitted"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "RATING ERROR:",
+            error.response?.data ||
+            error.message
+        );
+
+        showToast(
+            error.response?.data?.message ||
+            "Unable to submit rating.",
+            "error"
+        );
+
+    } finally {
+        setRatingSubmitting(false);
     }
 };
 
@@ -2036,7 +2181,138 @@ const handleOnlinePayment = async () => {
                         0 15px 40px
                         rgba(15,23,42,.07);
                 }
+                /* RIDER RATING */
 
+.rb-rating-card {
+    margin-top:24px;
+    padding:28px;
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(226,232,240,.75);
+    border-radius:25px;
+    box-shadow:0 15px 40px rgba(15,23,42,.07);
+}
+
+.rb-rating-header {
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:20px;
+}
+
+.rb-rating-header h3 {
+    margin:6px 0;
+    font-size:22px;
+    font-weight:900;
+    color:#0f172a;
+}
+
+.rb-rating-header p {
+    margin:0;
+    color:#64748b;
+    font-size:14px;
+}
+
+.rb-rating-icon {
+    width:52px;
+    height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:16px;
+    background:#fff7ed;
+    font-size:26px;
+}
+
+.rb-rating-stars {
+    display:flex;
+    gap:8px;
+    margin:24px 0 18px;
+}
+
+.rb-star {
+    border:none;
+    background:transparent;
+    padding:4px;
+    cursor:pointer;
+    font-size:34px;
+    color:#cbd5e1;
+    transition:
+        transform .15s ease,
+        color .15s ease;
+}
+
+.rb-star:hover {
+    transform:scale(1.12);
+}
+
+.rb-star.active {
+    color:#f59e0b;
+}
+
+.rb-rating-review {
+    width:100%;
+    min-height:100px;
+    padding:14px;
+    box-sizing:border-box;
+    resize:vertical;
+    border:1px solid #d1d5db;
+    border-radius:12px;
+    font-family:inherit;
+    font-size:14px;
+    color:#0f172a;
+    outline:none;
+}
+
+.rb-rating-review:focus {
+    border-color:#2563eb;
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.1);
+}
+
+.rb-rating-submit {
+    width:100%;
+    margin-top:16px;
+    padding:13px 18px;
+    border:none;
+    border-radius:12px;
+    background:#2563eb;
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:
+        transform .15s ease,
+        opacity .15s ease;
+}
+
+.rb-rating-submit:hover:not(:disabled) {
+    transform:translateY(-1px);
+}
+
+.rb-rating-submit:disabled {
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+.rb-rating-success {
+    display:flex;
+    align-items:center;
+    gap:16px;
+}
+
+.rb-rating-success h3 {
+    margin:0 0 5px;
+    font-size:20px;
+    color:#0f172a;
+}
+
+.rb-rating-success p {
+    margin:0;
+    color:#64748b;
+    font-size:14px;
+}
+    
                 /* BOOKING */
 
                 .rb-booking-card {
@@ -4675,7 +4951,103 @@ const handleOnlinePayment = async () => {
                                     )}
 
                                 </div>
+                                    {/* =================================================
+    RIDER RATING
+================================================= */}
 
+{acceptedRide.status === "completed" && (
+
+    <div className="rb-rating-card">
+
+        {!ratingSubmitted ? (
+            <>
+                <div className="rb-rating-header">
+                    <div>
+                        <span className="rb-section-kicker">
+                            RIDE FEEDBACK
+                        </span>
+
+                        <h3>
+                            How was your ride?
+                        </h3>
+
+                        <p>
+                            Rate your rider and help improve RideBack.
+                        </p>
+                    </div>
+
+                    <div className="rb-rating-icon">
+                        ⭐
+                    </div>
+                </div>
+
+                <div className="rb-rating-stars">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                            key={star}
+                            type="button"
+                            className={
+                                star <= rating
+                                    ? "rb-star active"
+                                    : "rb-star"
+                            }
+                            onClick={() =>
+                                setRating(star)
+                            }
+                            aria-label={`${star} star`}
+                        >
+                            ★
+                        </button>
+                    ))}
+                </div>
+
+                <textarea
+                    className="rb-rating-review"
+                    placeholder="Write a review (optional)"
+                    value={review}
+                    onChange={(e) =>
+                        setReview(e.target.value)
+                    }
+                    maxLength={500}
+                />
+
+                <button
+                    type="button"
+                    className="rb-rating-submit"
+                    onClick={handleSubmitRating}
+                    disabled={
+                        ratingSubmitting ||
+                        rating === 0
+                    }
+                >
+                    {ratingSubmitting
+                        ? "Submitting..."
+                        : "Submit Rating"}
+                </button>
+            </>
+        ) : (
+
+            <div className="rb-rating-success">
+                <div className="rb-success-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <h3>
+                        Thank you!
+                    </h3>
+
+                    <p>
+                        Your rating has been submitted successfully.
+                    </p>
+                </div>
+            </div>
+
+        )}
+
+    </div>
+
+)}
                             </section>
 
                         )}

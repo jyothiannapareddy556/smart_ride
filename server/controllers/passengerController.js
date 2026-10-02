@@ -737,11 +737,8 @@ const getAcceptedRide = async (req, res) => {
 
         if (rows.length === 0) {
 
-            return res.status(404).json({
-                message:
-                    "No active ride found."
-            });
-        }
+    return res.status(200).json(null);
+}
 
 
         return res.status(200).json(
@@ -1469,6 +1466,114 @@ const completeCashPayment = async (
     }
 };
 
+const submitRating = async (req, res) => {
+    try {
+        const {
+            booking_id,
+            rider_rating,
+            rider_review
+        } = req.body;
+
+        // ----------------------------------------------------
+        // VALIDATION
+        // ----------------------------------------------------
+
+        if (!booking_id || !rider_rating) {
+            return res.status(400).json({
+                message:
+                    "Booking ID and rating are required."
+            });
+        }
+
+        const rating = Number(rider_rating);
+
+        if (
+            !Number.isInteger(rating) ||
+            rating < 1 ||
+            rating > 5
+        ) {
+            return res.status(400).json({
+                message:
+                    "Rating must be between 1 and 5."
+            });
+        }
+
+        // ----------------------------------------------------
+        // CHECK COMPLETED RIDE
+        // ----------------------------------------------------
+
+        const {
+            rows
+        } = await db.query(
+            `
+            SELECT
+                id,
+                status,
+                rider_id
+            FROM bookings
+            WHERE id = $1
+            `,
+            [booking_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message:
+                    "Booking not found."
+            });
+        }
+
+        const ride = rows[0];
+
+        if (ride.status !== "completed") {
+            return res.status(400).json({
+                message:
+                    "You can rate only a completed ride."
+            });
+        }
+
+        // ----------------------------------------------------
+        // UPDATE RATING
+        // ----------------------------------------------------
+
+        await db.query(
+            `
+            UPDATE bookings
+            SET
+                rider_rating = $1,
+                rider_review = $2
+            WHERE id = $3
+            `,
+            [
+                rating,
+                rider_review?.trim() || null,
+                booking_id
+            ]
+        );
+
+        return res.status(200).json({
+            message:
+                "Rating submitted successfully.",
+            booking_id,
+            rider_rating: rating,
+            rider_review:
+                rider_review?.trim() || null
+        });
+
+    } catch (error) {
+
+        console.error(
+            "SUBMIT RATING ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Failed to submit rating."
+        });
+    }
+};
+
 
 // ============================================================
 // EXPORT CONTROLLERS
@@ -1488,5 +1593,7 @@ module.exports = {
 
     updatePaymentMethod,
 
-    completeCashPayment
+    completeCashPayment,
+
+    submitRating
 };

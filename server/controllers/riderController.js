@@ -63,7 +63,7 @@ const getPendingRides = async (req, res) => {
         b.final_fare,
         b.payment_method,
         b.payment_status,
-
+        
         u.name AS passenger_name,
         u.phone AS passenger_phone
 
@@ -546,12 +546,17 @@ const completeRide = async (req, res) => {
       `
       UPDATE bookings
 
-      SET status = 'completed'
+SET
+  status = 'completed',
+  payment_status = CASE
+    WHEN payment_method = 'cash' THEN 'paid'
+    ELSE payment_status
+  END
 
-      WHERE
-        id = $1
-        AND rider_id = $2
-        AND status = 'ongoing'
+WHERE
+  id = $1
+  AND rider_id = $2
+  AND status = 'ongoing'
       `,
       [bookingId, riderId]
     );
@@ -864,6 +869,9 @@ const getRideHistory = async (req, res) => {
 
         b.payment_method,
         b.payment_status,
+
+        b.rider_rating,
+        b.rider_review,
 
         u.name AS passenger_name,
         u.phone AS passenger_phone
