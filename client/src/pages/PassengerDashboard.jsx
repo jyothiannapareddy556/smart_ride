@@ -33,7 +33,7 @@ const PassengerDashboard = () => {
     // ============================================================
     // ACCEPTED RIDE
     // ============================================================
-
+    const [rideStatus, setRideStatus] = useState("accepted");
     const [acceptedRide, setAcceptedRide] = useState(null);
     console.log("ACCEPTED RIDE DATA:", acceptedRide);
 
@@ -252,6 +252,7 @@ useEffect(() => {
                         );
 
                         setAcceptedRide(ride);
+                        setRideStatus(ride.status);
 
                         const currentBookingId =
                             ride.booking_id || ride.id;
@@ -364,6 +365,7 @@ useEffect(() => {
                 "CURRENT BOOKING FROM HISTORY:",
                 currentRide
             );
+            setRideStatus(currentRide.status);
 
             // ----------------------------------------------------
             // RIDER COMPLETED THE RIDE
@@ -378,6 +380,7 @@ useEffect(() => {
                 );
 
                 setAcceptedRide(currentRide);
+                setRideStatus(currentRide.status);
 
                 setBookingId(
                     currentBookingId
@@ -2353,6 +2356,32 @@ const handleOnlinePayment = async () => {
                     font-weight:950;
                     letter-spacing:.5px;
                 }
+                 
+                .rb-ride-timeline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 25px 0;
+  padding: 15px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.rb-ride-timeline div {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rb-ride-timeline div.active {
+  background: #dbeafe;
+  color: #2563eb;
+}
 
                 .rb-accepted h2 {
                     margin:9px 0 0;
@@ -4066,6 +4095,21 @@ const handleOnlinePayment = async () => {
                                         </div>
 
                                     </div>
+                                    <div className="rb-ride-timeline">
+
+    <div className={rideStatus === "accepted" || rideStatus === "ongoing" || rideStatus === "completed" ? "active" : ""}>
+        ✓ Ride Accepted
+    </div>
+
+    <div className={rideStatus === "ongoing" || rideStatus === "completed" ? "active" : ""}>
+        🛵 Rider Coming
+    </div>
+
+    <div className={rideStatus === "completed" ? "active" : ""}>
+        🏁 Ride Completed
+    </div>
+
+</div>
 
                                     {/* DETAILS */}
 

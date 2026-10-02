@@ -35,20 +35,27 @@ L.Icon.Default.mergeOptions({
 // RIDER ICON
 // =====================================================
 
-const riderIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-
-  iconSize: [25, 41],
-
-  iconAnchor: [12, 41],
-
-  popupAnchor: [1, -34],
-
-  shadowSize: [41, 41],
+const riderIcon = L.divIcon({
+  className: "rider-map-icon",
+  html: `
+    <div style="
+      width: 46px;
+      height: 46px;
+      background: #059669;
+      border: 4px solid white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      font-size: 25px;
+    ">
+      🛵
+    </div>
+  `,
+  iconSize: [46, 46],
+  iconAnchor: [23, 23],
+  popupAnchor: [0, -23],
 });
 
 // =====================================================

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 import {
   MapContainer,
@@ -34,20 +35,27 @@ L.Icon.Default.mergeOptions({
 // RIDER ICON - RED
 // =====================================================
 
-const riderIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-
-  iconSize: [25, 41],
-
-  iconAnchor: [12, 41],
-
-  popupAnchor: [1, -34],
-
-  shadowSize: [41, 41],
+const riderIcon = L.divIcon({
+  className: "rider-map-icon",
+  html: `
+    <div style="
+      width: 46px;
+      height: 46px;
+      background: #059669;
+      border: 4px solid white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      font-size: 25px;
+    ">
+      🛵
+    </div>
+  `,
+  iconSize: [46, 46],
+  iconAnchor: [23, 23],
+  popupAnchor: [0, -23],
 });
 
 // =====================================================
@@ -350,8 +358,17 @@ const PassengerMap = ({
   const [route, setRoute] =
     useState([]);
 
+    const [roadRoute, setRoadRoute] =
+  useState([]);
+
   const [routeLoading, setRouteLoading] =
     useState(false);
+
+    const [riderEta, setRiderEta] = useState(null);
+
+    const [riderDistance, setRiderDistance] = useState(null);
+
+    const [riderStatus, setRiderStatus] = useState("on the way");
 
   // ===================================================
   // LOAD LOCATIONS
@@ -468,6 +485,160 @@ const PassengerMap = ({
     pickupLocation,
     dropLocation,
   ]);
+// ===================================================
+// CALCULATE RIDER ETA TO PICKUP
+// ===================================================
+
+useEffect(() => {
+  if (!riderCoords || !pickupCoords) {
+    setRiderEta(null);
+    return;
+  }
+
+  const calculateETA = async () => {
+    try {
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${riderCoords[1]},${riderCoords[0]};` +
+        `${pickupCoords[1]},${pickupCoords[0]}` +
+        `?overview=false`;
+
+      const response = await axios.get(url);
+
+      if (
+        response.data &&
+        response.data.code === "Ok" &&
+        response.data.routes &&
+        response.data.routes.length > 0
+      ) {
+
+        const distance =
+          response.data.routes[0].distance;
+
+        const distanceKm =
+          Number((distance / 1000).toFixed(2));
+
+        setRiderDistance(distanceKm);
+        console.log(
+          "RIDER DISTANCE:",
+          distanceKm,
+          "km"
+        );
+
+        if (distanceKm <= 0.2) {
+            setRiderStatus("arrived");
+          } else if (distanceKm <= 1) {
+            setRiderStatus("approaching");
+          } else {
+            setRiderStatus("on the way");
+          }
+
+        const duration =
+          response.data.routes[0].duration;
+
+        const minutes = Math.max(
+          1,
+          Math.ceil(duration / 60)
+        );
+
+        setRiderEta(minutes);
+
+        console.log(
+          "RIDER ETA:",
+          minutes,
+          "minutes"
+        );
+      } else {
+        setRiderEta(null);
+      }
+    } catch (error) {
+      console.error(
+        "ETA CALCULATION ERROR:",
+        error
+      );
+
+      setRiderEta(null);
+    }
+  };
+
+  // Calculate immediately
+  calculateETA();
+
+  
+  // Refresh every 20 seconds
+
+const interval = setInterval(() => {
+  console.log("ETA TIMER RUNNING");
+  calculateETA();
+}, 20000);
+
+return () => {
+  console.log("ETA TIMER STOPPED");
+  clearInterval(interval);
+};
+}, [riderCoords, pickupCoords]);
+
+// ===================================================
+// GET REAL ROAD ROUTE
+// ===================================================
+
+useEffect(() => {
+  if (
+    !riderCoords ||
+    !pickupCoords ||
+    !dropCoords
+  ) {
+    setRoadRoute([]);
+    return;
+  }
+
+  const getRoadRoute = async () => {
+    try {
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${riderCoords[1]},${riderCoords[0]};` +
+        `${pickupCoords[1]},${pickupCoords[0]};` +
+        `${dropCoords[1]},${dropCoords[0]}` +
+        `?overview=full&geometries=geojson`;
+
+      const response = await axios.get(url);
+
+      if (
+        response.data &&
+        response.data.code === "Ok" &&
+        response.data.routes &&
+        response.data.routes.length > 0
+      ) {
+        const coordinates =
+          response.data.routes[0]
+            .geometry.coordinates;
+
+        const leafletCoordinates =
+          coordinates.map(([lng, lat]) => [
+            lat,
+            lng,
+          ]);
+
+        setRoadRoute(leafletCoordinates);
+      } else {
+        setRoadRoute([]);
+      }
+    } catch (error) {
+      console.error(
+        "ROAD ROUTE ERROR:",
+        error
+      );
+
+      setRoadRoute([]);
+    }
+  };
+
+  getRoadRoute();
+}, [
+  riderCoords,
+  pickupCoords,
+  dropCoords,
+]);
 
   // ===================================================
   // CREATE SIMPLE ROUTE LINE
@@ -538,17 +709,29 @@ const PassengerMap = ({
             >
               <Popup>
                 <strong>
-                  🔴 Rider
+                  {riderStatus === "arrived"
+                    ? "🔔 Rider has arrived!"
+                    : riderStatus === "approaching"
+                    ? "🛵 Rider is approaching"
+                    : "🛵 Rider is on the way"}
                 </strong>
 
                 <br />
 
-                Rider Location:
+                {riderLocation || "Current location"}
+
+                <br />
+                <br />
+
+                {riderDistance !== null
+                  ? `📍 Distance: ${riderDistance} km`
+                  : "📍 Calculating distance..."}
 
                 <br />
 
-                {riderLocation ||
-                  "Current location"}
+                {riderEta
+                  ? `⏱️ Rider will arrive in: ${riderEta} min`
+                  : "⏱️ Calculating arrival time..."}
               </Popup>
             </Marker>
           )}
@@ -607,9 +790,9 @@ const PassengerMap = ({
               ROUTE LINE
           ========================================= */}
 
-          {route.length >= 2 && (
+          {roadRoute.length >= 2 && (
             <Polyline
-              positions={route}
+              positions={roadRoute}
               pathOptions={{
                 color: "blue",
                 weight: 5,

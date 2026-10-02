@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import RiderMap from "../components/RiderMap";
+import axios from "axios";
 
 export default function RiderDashboard() {
   const navigate = useNavigate();
@@ -220,6 +221,61 @@ setRides(res.data || []);
       setHistoryLoading(false);
     }
   };
+ 
+  //====================================
+  // NAVIGATION
+  //====================================
+
+ const navigateToPickup = async (ride) => {
+  try {
+    // If coordinates are already available, use them
+    if (ride.pickup_lat && ride.pickup_lng) {
+      const url =
+        `https://www.google.com/maps/dir/?api=1` +
+        `&destination=${ride.pickup_lat},${ride.pickup_lng}` +
+        `&travelmode=driving`;
+
+      window.open(url, "_blank");
+      return;
+    }
+
+    // Otherwise, convert pickup address into coordinates
+    if (!ride.pickup_location) {
+      alert("Pickup location is not available.");
+      return;
+    }
+
+    const response = await axios.get(
+      "https://nominatim.openstreetmap.org/search",
+      {
+        params: {
+          q: ride.pickup_location,
+          format: "json",
+          limit: 1,
+          countrycodes: "in",
+        },
+      }
+    );
+
+    if (!response.data || response.data.length === 0) {
+      alert("Could not find the pickup location.");
+      return;
+    }
+
+    const { lat, lon } = response.data[0];
+
+    const url =
+      `https://www.google.com/maps/dir/?api=1` +
+      `&destination=${lat},${lon}` +
+      `&travelmode=driving`;
+
+    window.open(url, "_blank");
+  } catch (error) {
+    console.error("NAVIGATION ERROR:", error);
+    alert("Unable to open navigation.");
+  }
+};
+
 
   // =====================================================
   // UPDATE GPS LOCATION
@@ -1105,7 +1161,7 @@ setRides(res.data || []);
                     </div>
 
                     {ride.status === "pending" && <div className="rb-action-row"><button className="rb-btn rb-accept" onClick={() => handleAcceptRide(ride.id)}>✓ Accept Ride</button><button className="rb-btn rb-reject" onClick={() => handleRejectRide(ride.id)}>✕ Reject Ride</button></div>}
-                    {ride.status === "accepted" && <div><div className="rb-message success"><strong>✓ Ride accepted</strong><br/>The passenger is waiting for you. Start the ride when you begin the journey.</div><button className="rb-btn rb-start" onClick={() => startRide(ride.id)}>🛵 Start Ride</button></div>}
+                    {ride.status === "accepted" && <div><div className="rb-message success"><strong>✓ Ride accepted</strong><br/>The passenger is waiting for you. Start the ride when you begin the journey.</div><button className="rb-btn rb-start" onClick={() => startRide(ride.id)}>🛵 Start Ride</button><button  className="rb-btn"  onClick={() => navigateToPickup(ride)}> 🧭 Navigate to Pickup</button></div>}
                     {ride.status === "ongoing" && <div><div className="rb-message info"><strong>🔵 Ride in progress</strong><br/>Take the passenger to the destination and complete the ride after reaching the destination.</div><button className="rb-btn rb-complete" onClick={() => completeRide(ride.id)}>🏁 Complete Ride</button></div>}
                     {ride.status === "completed" && <div className="rb-message info" style={{textAlign:"center",fontWeight:900}}>✓ Ride Completed Successfully</div>}
                     {ride.status === "rejected" && <div className="rb-message error" style={{textAlign:"center",fontWeight:900}}>Ride Request Rejected</div>}
