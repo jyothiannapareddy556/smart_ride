@@ -45,6 +45,7 @@ const PassengerDashboard = () => {
 
     const completedNotificationShownRef = useRef(false);
 
+    const riderArrivedNotificationShownRef = useRef(false);
    
     console.log("ACCEPTED RIDE DATA:", acceptedRide);
 
@@ -53,6 +54,9 @@ const PassengerDashboard = () => {
     // ============================================================
 
     const [distance, setDistance] = useState("");
+
+    const [riderDistanceToPickup, setRiderDistanceToPickup] =
+    useState(null);
     const [fare, setFare] = useState(null);
     const [calculatingFare, setCalculatingFare] = useState(false);
 
@@ -248,9 +252,122 @@ const closeNotification = () => {
         };
     }, []);
 
+    const handleCancelRide = async () => {
+    if (!bookingId || !user?.id) {
+        return;
+    }
+
+    try {
+        const response = await api.put(
+            "/rides/cancel",
+            {
+                booking_id: bookingId,
+                passenger_id: user.id,
+            }
+        );
+
+        showNotification(
+            "success",
+            "Ride Cancelled",
+            response.data?.message ||
+                "Your ride has been cancelled."
+        );
+
+        setAcceptedRide(null);
+        setRideStatus("rejected");
+        setBookingId(null);
+
+        localStorage.removeItem(
+            "rideback_current_booking_id"
+        );
+
+    } catch (error) {
+        console.error(
+            "CANCEL RIDE ERROR:",
+            error.response?.data ||
+                error.message
+        );
+
+        showNotification(
+            "error",
+            "Unable to Cancel",
+            error.response?.data?.message ||
+                "Could not cancel the ride."
+        );
+    }
+};
+
     // ============================================================
     // CHECK ACCEPTED RIDE
     // ============================================================
+
+    const handleShareRide = async () => {
+    if (!acceptedRide) {
+        return;
+    }
+
+    const bookingId =
+        acceptedRide.booking_id || acceptedRide.id;
+
+    const shareText = `
+RideBack Ride Details
+
+Booking: #${bookingId}
+Rider: ${acceptedRide.rider_name || "—"}
+Pickup: ${acceptedRide.pickup_location || "—"}
+Destination: ${acceptedRide.drop_location || "—"}
+Distance: ${
+        acceptedRide.distance_km
+            ? `${Number(acceptedRide.distance_km).toFixed(2)} km`
+            : "—"
+    }
+Fare: ${
+        acceptedRide.final_fare
+            ? `₹${Number(acceptedRide.final_fare).toFixed(2)}`
+            : "—"
+    }
+Payment: ${acceptedRide.payment_method || "—"}
+Status: ${acceptedRide.status || "—"}
+
+RideBack
+`;
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: `RideBack Ride #${bookingId}`,
+                text: shareText.trim(),
+            });
+
+            return;
+        }
+
+        await navigator.clipboard.writeText(
+            shareText.trim()
+        );
+
+        showNotification(
+            "success",
+            "Ride Details Copied",
+            "Ride details have been copied to your clipboard."
+        );
+    } catch (error) {
+        if (error.name === "AbortError") {
+            return;
+        }
+
+        console.error(
+            "SHARE RIDE ERROR:",
+            error
+        );
+
+        showNotification(
+            "error",
+            "Unable to Share",
+            "Could not share the ride details."
+        );
+    }
+};
 
     // ============================================================
 // CHECK RIDE STATUS
@@ -303,6 +420,7 @@ useEffect(() => {
                         setAcceptedRide(ride);
                         setRideStatus(ride.status);
 
+                        
                       
 
                         const currentBookingId =
@@ -419,6 +537,24 @@ useEffect(() => {
             setRideStatus(currentRide.status);
 
             if (
+    currentRide.status === "rejected" &&
+    acceptedRide?.status !== "rejected"
+) {
+    showNotification(
+        "warning",
+        "Ride Request Expired",
+        "The rider did not accept your request within 20 seconds."
+    );
+
+    setAcceptedRide(null);
+    setRideStatus("rejected");
+    setBookingId(null);
+
+    localStorage.removeItem(
+        "rideback_current_booking_id"
+    );
+}
+            if (
     currentRide.status === "ongoing" &&
     !startedNotificationShownRef.current
 ) {
@@ -528,6 +664,32 @@ useEffect(() => {
         clearInterval(interval);
     };
 }, [user, bookingId]);
+
+// ============================================================
+// RIDER ARRIVED NOTIFICATION — 200 METERS
+// ============================================================
+useEffect(() => {
+    if (
+        riderDistanceToPickup === null ||
+        !acceptedRide ||
+        acceptedRide.status !== "accepted"
+    ) {
+        return;
+    }
+
+    if (
+        riderDistanceToPickup <= 0.2 &&
+        !riderArrivedNotificationShownRef.current
+    ) {
+        showNotification(
+            "success",
+            "Rider Has Arrived",
+            "Your rider is within 200 meters of the pickup location."
+        );
+
+        riderArrivedNotificationShownRef.current = true;
+    }
+}, [riderDistanceToPickup, acceptedRide]);
 
     // ============================================================
     // LOGOUT
@@ -2312,7 +2474,7 @@ const handleSubmitRating = async () => {
     color:#64748b;
     font-size:14px;
 }
-    
+
                 /* BOOKING */
 
                 .rb-booking-card {
@@ -2837,6 +2999,91 @@ const handleSubmitRating = async () => {
                     font-size:10px;
                     font-weight:950;
                 }
+                .rb-rider-phone-row {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.rb-rider-phone-row p {
+    margin:0;
+}
+
+.rb-call-rider-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:7px 12px;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    transition:transform .15s ease, opacity .15s ease;
+}
+
+.rb-call-rider-btn:hover {
+    opacity:.9;
+    transform:translateY(-1px);
+}
+
+
+.rb-vehicle-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.rb-vehicle-info p {
+    margin: 0;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+                .rb-rider-status-card {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:12px;
+    padding:14px 16px;
+    border-radius:16px;
+    background:#eff6ff;
+    border:1px solid #bfdbfe;
+}
+
+.rb-rider-status-card strong {
+    display:block;
+    font-size:14px;
+    font-weight:900;
+    color:#1e3a8a;
+}
+
+.rb-rider-status-card p {
+    margin:4px 0 0;
+    color:#64748b;
+    font-size:12px;
+}
+
+.rb-rider-status-card > span {
+    flex-shrink:0;
+    padding:7px 10px;
+    border-radius:999px;
+    background:white;
+    color:#2563eb;
+    font-size:12px;
+    font-weight:900;
+}
 
                 .rb-map-wrap {
                     border-radius:20px;
@@ -2846,6 +3093,206 @@ const handleSubmitRating = async () => {
                         0 10px 25px
                         rgba(15,23,42,.06);
                 }
+
+                                /* RIDE RECEIPT */
+
+                .rb-receipt-card {
+                    margin-top: 20px;
+                    padding: 22px;
+                    border-radius: 20px;
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    box-shadow: 0 10px 25px rgba(15,23,42,.06);
+                }
+
+                .rb-receipt-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 15px;
+                    padding-bottom: 16px;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+
+                .rb-receipt-brand {
+                    color: #2563eb;
+                    font-size: 12px;
+                    font-weight: 950;
+                    text-transform: uppercase;
+                    letter-spacing: .08em;
+                }
+
+                .rb-receipt-header h3 {
+                    margin: 4px 0 0;
+                    font-size: 20px;
+                    font-weight: 950;
+                }
+
+                .rb-receipt-booking {
+                    padding: 7px 10px;
+                    border-radius: 9px;
+                    background: #f8fafc;
+                    color: #64748b;
+                    font-size: 11px;
+                    font-weight: 800;
+                    white-space: nowrap;
+                }
+
+                .rb-receipt-route {
+                    display: grid;
+                    grid-template-columns: 1fr auto 1fr;
+                    gap: 15px;
+                    align-items: center;
+                    margin-top: 18px;
+                    padding: 15px;
+                    border-radius: 14px;
+                    background: #f8fafc;
+                }
+
+                .rb-receipt-route small {
+                    display: block;
+                    color: #64748b;
+                    font-size: 9px;
+                    font-weight: 950;
+                    margin-bottom: 4px;
+                }
+
+                .rb-receipt-route strong {
+                    display: block;
+                    color: #0f172a;
+                    font-size: 13px;
+                }
+
+                .rb-receipt-route > span {
+                    color: #2563eb;
+                    font-size: 20px;
+                    font-weight: 900;
+                }
+
+                .rb-receipt-details {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 10px;
+                    margin-top: 16px;
+                }
+
+                .rb-receipt-details > div {
+                    padding: 12px;
+                    border-radius: 12px;
+                    background: #f8fafc;
+                }
+
+                .rb-receipt-details span {
+                    display: block;
+                    color: #64748b;
+                    font-size: 10px;
+                    font-weight: 800;
+                    margin-bottom: 4px;
+                }
+
+                .rb-receipt-details strong {
+                    color: #0f172a;
+                    font-size: 13px;
+                }
+
+                .rb-receipt-details .rb-receipt-total {
+                    background: #eff6ff;
+                    border: 1px solid #bfdbfe;
+                }
+
+                .rb-receipt-total strong {
+                    color: #2563eb;
+                    font-size: 18px;
+                }
+
+                .rb-payment-paid {
+                    color: #059669 !important;
+                    text-transform: capitalize;
+                }
+
+                .rb-payment-pending {
+                    color: #ca8a04 !important;
+                    text-transform: capitalize;
+                }
+
+                @media(max-width:600px) {
+                    .rb-receipt-card {
+                        padding: 18px;
+                    }
+
+                    .rb-receipt-header {
+                        display: block;
+                    }
+
+                    .rb-receipt-booking {
+                        display: inline-block;
+                        margin-top: 10px;
+                    }
+
+                    .rb-receipt-route {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .rb-receipt-route > span {
+                        transform: rotate(90deg);
+                        justify-self: center;
+                    }
+
+                    .rb-receipt-details {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+
+                                .rb-share-ride-btn {
+                    width: 100%;
+                    margin-top: 16px;
+                    padding: 12px 16px;
+                    border: none;
+                    border-radius: 12px;
+                    background: #2563eb;
+                    color: white;
+                    font-size: 13px;
+                    font-weight: 900;
+                    cursor: pointer;
+                    transition: .2s ease;
+                }
+
+                .rb-share-ride-btn:hover {
+                    background: #1d4ed8;
+                    transform: translateY(-1px);
+                }
+
+                .rb-share-ride-btn:active {
+                    transform: translateY(0);
+                }
+                
+                /* CANCEL RIDE */
+
+.rb-cancel-ride-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fff1f2;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.rb-cancel-ride-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
+}
+
+.rb-cancel-ride-btn:active {
+    transform: translateY(0);
+}
+    
 
                 /* STATUS */
 
@@ -4416,12 +4863,37 @@ const handleSubmitRating = async () => {
                                                     }
                                                 </h3>
 
-                                                <p>
-                                                    📞{" "}
-                                                    {
-                                                        acceptedRide.rider_phone
-                                                    }
-                                                </p>
+                                                <div className="rb-rider-phone-row">
+
+    <p>
+        📞{" "}
+        {acceptedRide.rider_phone}
+    </p>
+
+    {acceptedRide.rider_phone && (
+        <a
+            href={`tel:${acceptedRide.rider_phone}`}
+            className="rb-call-rider-btn"
+        >
+            📞 Call Rider
+        </a>
+    )}
+
+</div>
+
+<div className="rb-vehicle-info">
+
+    <p>
+        🛵{" "}
+        {acceptedRide.vehicle_type || "Vehicle"}
+    </p>
+
+    <p>
+        🔢{" "}
+        {acceptedRide.vehicle_number || "Number not available"}
+    </p>
+
+</div>
 
                                             </div>
 
@@ -4502,25 +4974,191 @@ const handleSubmitRating = async () => {
                                             </span>
 
                                         </div>
+                                        {acceptedRide.status === "accepted" &&
+    riderDistanceToPickup !== null && (
+        <div className="rb-rider-status-card">
+            <div>
+                <strong>
+                    {riderDistanceToPickup <= 0.2
+                        ? "🔔 Rider has arrived"
+                        : riderDistanceToPickup <= 1
+                        ? "🛵 Rider is approaching"
+                        : "🛵 Rider is on the way"}
+                </strong>
 
+                <p>
+                    {riderDistanceToPickup <= 0.2
+                        ? "Your rider is within 200 meters of pickup."
+                        : `Your rider is ${riderDistanceToPickup} km away from pickup.`}
+                </p>
+            </div>
+
+            <span>
+                📍 {riderDistanceToPickup} km
+            </span>
+        </div>
+    )}
                                         <div className="rb-map-wrap">
 
                                             <PassengerMap
-                                                riderLocation={
-                                                    acceptedRide.rider_location ||
-                                                    acceptedRide.current_location
-                                                }
-                                                pickupLocation={
-                                                    acceptedRide.pickup_location
-                                                }
-                                                dropLocation={
-                                                    acceptedRide.drop_location
-                                                }
-                                            />
+    riderLocation={
+        acceptedRide.rider_location ||
+        acceptedRide.current_location
+    }
+    pickupLocation={
+        acceptedRide.pickup_location
+    }
+    dropLocation={
+        acceptedRide.drop_location
+    }
+    onRiderDistanceChange={(distanceKm) => {
+    setRiderDistanceToPickup(distanceKm);
+
+    console.log(
+        "RIDER DISTANCE FROM PASSENGER MAP:",
+        distanceKm,
+        "km"
+    );
+}}
+/>
 
                                         </div>
 
                                     </div>
+
+
+                                                                        {/* RIDE RECEIPT */}
+
+                                    {acceptedRide.status === "completed" && (
+                                        <div className="rb-receipt-card">
+
+                                            <div className="rb-receipt-header">
+                                                <div>
+                                                    <div className="rb-receipt-brand">
+                                                        RideBack
+                                                    </div>
+
+                                                    <h3>
+                                                        🧾 Ride Receipt
+                                                    </h3>
+                                                </div>
+
+                                                <div className="rb-receipt-booking">
+                                                    Booking #{acceptedRide.booking_id || acceptedRide.id}
+                                                </div>
+                                            </div>
+
+                                                                                        <button
+                                                type="button"
+                                                className="rb-share-ride-btn"
+                                                onClick={handleShareRide}
+                                            >
+                                                📤 Share Ride Details
+                                            </button>
+
+                                            <div className="rb-receipt-route">
+                                                <div>
+                                                    <small>PICKUP</small>
+                                                    <strong>
+                                                        {acceptedRide.pickup_location}
+                                                    </strong>
+                                                </div>
+
+                                                <span>→</span>
+
+                                                <div>
+                                                    <small>DESTINATION</small>
+                                                    <strong>
+                                                        {acceptedRide.drop_location}
+                                                    </strong>
+                                                </div>
+                                            </div>
+
+                                            <div className="rb-receipt-details">
+
+                                                <div>
+                                                    <span>Rider</span>
+                                                    <strong>
+                                                        {acceptedRide.rider_name || "—"}
+                                                    </strong>
+                                                </div>
+
+                                                <div>
+                                                    <span>Distance</span>
+                                                    <strong>
+                                                        {acceptedRide.distance_km
+                                                            ? `${Number(acceptedRide.distance_km).toFixed(2)} km`
+                                                            : "—"}
+                                                    </strong>
+                                                </div>
+
+                                                <div>
+                                                    <span>Base Fare</span>
+                                                    <strong>
+                                                        {acceptedRide.base_fare
+                                                            ? `₹${Number(acceptedRide.base_fare).toFixed(2)}`
+                                                            : "—"}
+                                                    </strong>
+                                                </div>
+
+                                                <div>
+                                                    <span>Discount</span>
+                                                    <strong>
+                                                        {acceptedRide.discount
+                                                            ? `-₹${Number(acceptedRide.discount).toFixed(2)}`
+                                                            : "₹0.00"}
+                                                    </strong>
+                                                </div>
+
+                                                <div className="rb-receipt-total">
+                                                    <span>Final Fare</span>
+                                                    <strong>
+                                                        {acceptedRide.final_fare
+                                                            ? `₹${Number(acceptedRide.final_fare).toFixed(2)}`
+                                                            : "—"}
+                                                    </strong>
+                                                </div>
+
+                                                <div>
+                                                    <span>Payment</span>
+                                                    <strong style={{ textTransform: "capitalize" }}>
+                                                        {acceptedRide.payment_method || "—"}
+                                                    </strong>
+                                                </div>
+
+                                                <div>
+                                                    <span>Payment Status</span>
+                                                    <strong
+                                                        className={
+                                                            acceptedRide.payment_status === "paid"
+                                                                ? "rb-payment-paid"
+                                                                : "rb-payment-pending"
+                                                        }
+                                                    >
+                                                        {acceptedRide.payment_status || "pending"}
+                                                    </strong>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                    )}
+
+                                    {/* CANCEL RIDE */}
+
+{acceptedRide &&
+    (acceptedRide.status === "pending" ||
+        acceptedRide.status === "accepted") && (
+        <button
+            type="button"
+            className="rb-cancel-ride-btn"
+            onClick={handleCancelRide}
+        >
+            ✕ Cancel Ride
+        </button>
+    )}
+
+
 
                                     {/* STATUS */}
 

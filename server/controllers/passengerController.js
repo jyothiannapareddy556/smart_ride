@@ -588,6 +588,8 @@ const getMyBookings = async (req, res) => {
                 u.phone AS rider_phone,
                 u.current_location AS rider_location,
 
+                u.vehicle_type,
+                u.vehicle_number,
                 b.distance_km,
                 b.base_fare,
                 b.discount,
@@ -686,6 +688,9 @@ const getAcceptedRide = async (req, res) => {
                 u.name AS rider_name,
                 u.phone AS rider_phone,
                 u.current_location AS rider_location,
+
+                u.vehicle_type,
+                u.vehicle_number,
 
                 b.distance_km,
                 b.base_fare,
@@ -1574,6 +1579,101 @@ const submitRating = async (req, res) => {
     }
 };
 
+// ============================================================
+// CANCEL RIDE
+// PUT /api/rides/cancel
+// ============================================================
+
+const cancelRide = async (req, res) => {
+    try {
+
+        const {
+            booking_id,
+            passenger_id
+        } = req.body;
+
+        if (!booking_id || !passenger_id) {
+            return res.status(400).json({
+                message:
+                    "Booking ID and Passenger ID are required."
+            });
+        }
+
+        const {
+            rows: bookingRows
+        } = await db.query(
+            `
+            SELECT
+                id,
+                passenger_id,
+                rider_id,
+                status
+            FROM bookings
+            WHERE id = $1
+              AND passenger_id = $2
+            `,
+            [
+                booking_id,
+                passenger_id
+            ]
+        );
+
+        if (bookingRows.length === 0) {
+            return res.status(404).json({
+                message:
+                    "Booking not found."
+            });
+        }
+
+        const booking = bookingRows[0];
+
+        if (
+            ![
+                "pending",
+                "accepted"
+            ].includes(booking.status)
+        ) {
+            return res.status(400).json({
+                message:
+                    "This ride cannot be cancelled now."
+            });
+        }
+
+        await db.query(
+            `
+            UPDATE bookings
+SET
+    status = 'rejected',
+    rejection_reason = 'passenger_cancelled'
+WHERE id = $1
+  AND passenger_id = $2
+            `,
+            [
+                booking_id,
+                passenger_id
+            ]
+        );
+
+        return res.status(200).json({
+            message:
+                "Ride cancelled successfully.",
+            booking_id
+        });
+
+    } catch (error) {
+
+        console.error(
+            "CANCEL RIDE ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Failed to cancel ride."
+        });
+    }
+};
+
 
 // ============================================================
 // EXPORT CONTROLLERS
@@ -1595,5 +1695,7 @@ module.exports = {
 
     completeCashPayment,
 
-    submitRating
+    submitRating,
+
+    cancelRide
 };

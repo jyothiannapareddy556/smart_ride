@@ -7,7 +7,8 @@ const {
     calculateFare,
     updatePaymentMethod,
     completeCashPayment,
-    submitRating
+    submitRating,
+    cancelRide
 } = require("../controllers/passengerController");
 
 const router = express.Router();
@@ -97,6 +98,16 @@ router.put(
 router.post(
     "/rating",
     submitRating
+);
+
+// ============================================================
+// CANCEL RIDE
+// PUT /api/rides/cancel
+// ============================================================
+
+router.put(
+    "/cancel",
+    cancelRide
 );
 
 

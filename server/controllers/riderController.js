@@ -46,6 +46,24 @@ const getPendingRides = async (req, res) => {
     // GET RIDES
     // ----------------------------------------------------
 
+    // ----------------------------------------------------
+// EXPIRE OLD PENDING RIDES
+// ----------------------------------------------------
+
+await db.query(
+  `
+  UPDATE bookings
+  SET
+    status = 'rejected',
+    rejection_reason = 'timeout'
+  WHERE status = 'pending'
+    AND rider_id = $1
+    AND booking_date < NOW() - INTERVAL '20 seconds'
+  `,
+  [riderId]
+);
+
+
     const { rows: rides } = await db.query(
       `
       SELECT
@@ -63,6 +81,7 @@ const getPendingRides = async (req, res) => {
         b.final_fare,
         b.payment_method,
         b.payment_status,
+        b.rejection_reason,
         
         u.name AS passenger_name,
         u.phone AS passenger_phone
@@ -73,15 +92,23 @@ const getPendingRides = async (req, res) => {
         ON b.passenger_id = u.id
 
       WHERE
-        (
-          b.status = 'pending'
-          AND b.rider_id = $1
-        )
-        OR
-        (
-          b.status IN ('accepted', 'ongoing')
-          AND b.rider_id = $1
-        )
+  (
+    b.status = 'pending'
+    AND b.rider_id = $1
+    AND b.booking_date >= NOW() - INTERVAL '20 seconds'
+  )
+  OR
+  (
+    b.status IN ('accepted', 'ongoing')
+    AND b.rider_id = $1
+  )
+  OR
+  (
+    b.status = 'rejected'
+    AND b.rejection_reason = 'passenger_cancelled'
+    AND b.rider_id = $1
+    AND b.booking_date >= NOW() - INTERVAL '5 minutes'
+  )
 
       ORDER BY b.booking_date DESC
       `,

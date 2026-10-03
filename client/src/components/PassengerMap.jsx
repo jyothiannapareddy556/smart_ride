@@ -338,7 +338,8 @@ const PassengerMap = ({
   riderLocation,
   pickupLocation,
   dropLocation,
-}) => {
+  onRiderDistanceChange,
+})  => {
   // ===================================================
   // STATE
   // ===================================================
@@ -519,11 +520,16 @@ useEffect(() => {
           Number((distance / 1000).toFixed(2));
 
         setRiderDistance(distanceKm);
-        console.log(
-          "RIDER DISTANCE:",
-          distanceKm,
-          "km"
-        );
+
+if (onRiderDistanceChange) {
+  onRiderDistanceChange(distanceKm);
+}
+
+console.log(
+  "RIDER DISTANCE:",
+  distanceKm,
+  "km"
+);
 
         if (distanceKm <= 0.2) {
             setRiderStatus("arrived");
@@ -570,7 +576,7 @@ useEffect(() => {
 const interval = setInterval(() => {
   console.log("ETA TIMER RUNNING");
   calculateETA();
-}, 20000);
+}, 5000);
 
 return () => {
   console.log("ETA TIMER STOPPED");

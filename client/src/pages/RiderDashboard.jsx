@@ -17,6 +17,8 @@ export default function RiderDashboard() {
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
+  const cancelledRideNotificationRef = useRef(new Set());
+
   const showToast = (message, type = "success", title) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
 
@@ -162,7 +164,27 @@ console.log("PICKUP LNG:", res.data?.[0]?.pickup_lng);
 console.log("DROP LAT:", res.data?.[0]?.drop_lat);
 console.log("DROP LNG:", res.data?.[0]?.drop_lng);
 
-setRides(res.data || []);
+const newRides = res.data || [];
+
+const cancelledRide = newRides.find(
+  (ride) =>
+    ride.rejection_reason === "passenger_cancelled" &&
+    !cancelledRideNotificationRef.current.has(ride.id)
+);
+
+if (cancelledRide) {
+  showToast(
+    `Passenger cancelled ride #${cancelledRide.id}.`,
+    "warning",
+    "Ride Cancelled"
+  );
+
+  cancelledRideNotificationRef.current.add(
+    cancelledRide.id
+  );
+}
+
+setRides(newRides);
     } catch (error) {
       console.error(
         "FETCH RIDES ERROR:",
@@ -222,6 +244,71 @@ setRides(res.data || []);
     }
   };
  
+  const calculateDistanceKm = (
+    riderLocation,
+    pickupLat,
+    pickupLng
+) => {
+  console.log(
+    "DISTANCE CHECK:",
+    "riderLocation =", riderLocation,
+    "pickupLat =", pickupLat,
+    "pickupLng =", pickupLng
+);
+    if (
+        !riderLocation ||
+        pickupLat === null ||
+        pickupLat === undefined ||
+        pickupLng === null ||
+        pickupLng === undefined
+    ) {
+        return null;
+    }
+
+    const parts = String(riderLocation)
+        .split(",")
+        .map(Number);
+
+    if (
+        parts.length !== 2 ||
+        parts.some((value) => Number.isNaN(value))
+    ) {
+        return null;
+    }
+
+    const riderLat = parts[0];
+    const riderLng = parts[1];
+
+    const toRadians = (value) =>
+        (value * Math.PI) / 180;
+
+    const earthRadiusKm = 6371;
+
+    const dLat = toRadians(
+        Number(pickupLat) - riderLat
+    );
+
+    const dLng = toRadians(
+        Number(pickupLng) - riderLng
+    );
+
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRadians(riderLat)) *
+            Math.cos(toRadians(Number(pickupLat))) *
+            Math.sin(dLng / 2) ** 2;
+
+    const c =
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        );
+
+    return Number(
+        (earthRadiusKm * c).toFixed(2)
+    );
+};
   //====================================
   // NAVIGATION
   //====================================
@@ -968,6 +1055,16 @@ setRides(res.data || []);
         .rb-big-online { min-width:180px; }
         .rb-ride-card { padding:25px; margin-bottom:18px;transition:.25s; }
         .rb-ride-card:hover { transform:translateY(-3px);box-shadow:0 24px 55px rgba(15,23,42,.11); }
+        .rb-passenger-distance {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 900;
+}
         .rb-passenger { display:flex;align-items:center;gap:13px; }
         .rb-passenger-avatar { width:52px;height:52px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#e0f2fe);font-size:24px; }
         .rb-passenger h3 { margin:0;font-size:20px;font-weight:950; }
@@ -1324,6 +1421,22 @@ setRides(res.data || []);
               ) : (
                 rides.map((ride) => (
                   <div className="rb-card rb-ride-card" key={ride.id}>
+                  {(() => {
+    const passengerDistance = calculateDistanceKm(
+        currentLocation,
+        ride.pickup_lat,
+        ride.pickup_lng
+    );
+
+    return (
+        <div className="rb-passenger-distance">
+            📍 Passenger is{" "}
+            {passengerDistance !== null
+                ? `${passengerDistance} km away`
+                : "distance unavailable"}
+        </div>
+    );
+})()}
                     <div className="rb-ride-top">
                       <div className="rb-passenger"><div className="rb-passenger-avatar">👤</div><div><h3>{ride.passenger_name}</h3><div className="rb-muted">Passenger request · Booking #{ride.id}</div></div></div>
                       <span className={`rb-status ${ride.status}`}>● {ride.status}</span>
