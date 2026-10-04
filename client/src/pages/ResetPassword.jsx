@@ -45,7 +45,7 @@ const ResetPassword = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
+        "https://smart-ride-eeym.onrender.com/api/auth/reset-password",
         {
           token,
           password,
