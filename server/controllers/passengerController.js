@@ -596,7 +596,10 @@ const getMyBookings = async (req, res) => {
                 b.final_fare,
 
                 b.payment_method,
-                b.payment_status
+                b.payment_status,
+
+                b.rider_rating,
+                b.rider_review
 
             FROM bookings b
 
@@ -698,7 +701,10 @@ const getAcceptedRide = async (req, res) => {
                 b.final_fare,
 
                 b.payment_method,
-                b.payment_status
+                b.payment_status,
+
+                b.rider_rating,
+                b.rider_review
 
             FROM bookings b
 

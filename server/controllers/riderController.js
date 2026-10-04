@@ -110,6 +110,13 @@ await db.query(
     AND b.booking_date >= NOW() - INTERVAL '5 minutes'
   )
 
+  OR
+(
+  b.status = 'completed'
+  AND b.rider_id = $1
+  AND b.booking_date >= NOW() - INTERVAL '5 minutes'
+)
+
       ORDER BY b.booking_date DESC
       `,
       [riderId]
@@ -935,11 +942,53 @@ const getRideHistory = async (req, res) => {
       (ride) => ride.status === "completed"
     ).length;
 
+    // -------------------------------------------------
+// TODAY'S RIDES / EARNINGS
+// -------------------------------------------------
+
+const todayRides = rides.filter((ride) => {
+  if (!ride.booking_date) return false;
+
+  const rideDate = new Date(ride.booking_date);
+
+  const today = new Date();
+
+  const rideDateIST = rideDate.toLocaleDateString(
+    "en-IN",
+    { timeZone: "Asia/Kolkata" }
+  );
+
+  const todayIST = today.toLocaleDateString(
+    "en-IN",
+    { timeZone: "Asia/Kolkata" }
+  );
+
+  return rideDateIST === todayIST;
+});
+
+const todayEarnings = todayRides.reduce(
+  (total, ride) => {
+    if (
+      ride.status === "completed" &&
+      ride.final_fare !== null &&
+      ride.final_fare !== undefined
+    ) {
+      return total + Number(ride.final_fare);
+    }
+
+    return total;
+  },
+  0
+);
+
+
     return res.status(200).json({
-      rides,
-      totalEarnings,
-      completedRides,
-    });
+  rides,
+  totalEarnings,
+  completedRides,
+  todayRides: todayRides.length,
+  todayEarnings,
+});
 
   } catch (error) {
     console.error("GET RIDER HISTORY ERROR:", error);

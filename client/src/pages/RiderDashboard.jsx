@@ -19,6 +19,10 @@ export default function RiderDashboard() {
 
   const cancelledRideNotificationRef = useRef(new Set());
 
+  const newRideNotificationRef = useRef(new Set());
+
+  const completedRideNotificationRef = useRef(new Set());
+
   const showToast = (message, type = "success", title) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
 
@@ -47,6 +51,9 @@ export default function RiderDashboard() {
   const [rideHistory, setRideHistory] = useState([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [completedRidesCount, setCompletedRidesCount] = useState(0);
+
+  const [todayRides, setTodayRides] = useState(0);
+  const [todayEarnings, setTodayEarnings] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // =====================================================
@@ -166,6 +173,46 @@ console.log("DROP LNG:", res.data?.[0]?.drop_lng);
 
 const newRides = res.data || [];
 
+const completedRide = newRides.find(
+  (ride) =>
+    ride.status === "completed" &&
+    !completedRideNotificationRef.current.has(ride.id)
+);
+
+if (completedRide) {
+  showToast(
+    `Ride #${completedRide.id} has been completed. Fare: ₹${
+      completedRide.final_fare
+        ? Number(completedRide.final_fare).toFixed(2)
+        : "0.00"
+    }`,
+    "success",
+    "Ride Completed"
+  );
+
+  completedRideNotificationRef.current.add(
+    completedRide.id
+  );
+}
+
+const newRideRequest = newRides.find(
+  (ride) =>
+    ride.status === "pending" &&
+    !newRideNotificationRef.current.has(ride.id)
+);
+
+if (newRideRequest) {
+  showToast(
+    `Passenger requested a ride from ${newRideRequest.pickup_location || "pickup"} to ${newRideRequest.drop_location || "destination"}.`,
+    "info",
+    "New Ride Request"
+  );
+
+  newRideNotificationRef.current.add(
+    newRideRequest.id
+  );
+}
+
 const cancelledRide = newRides.find(
   (ride) =>
     ride.rejection_reason === "passenger_cancelled" &&
@@ -222,6 +269,10 @@ setRides(newRides);
         "RIDER HISTORY:",
         res.data
       );
+      console.log(
+    "RIDER HISTORY WITH FEEDBACK:",
+    res.data.rides
+);
 
       setRideHistory(
         res.data.rides || []
@@ -234,6 +285,14 @@ setRides(newRides);
       setCompletedRidesCount(
         Number(res.data.completedRides || 0)
       );
+
+      setTodayRides(
+    Number(res.data.todayRides || 0)
+);
+
+setTodayEarnings(
+    Number(res.data.todayEarnings || 0)
+);
     } catch (error) {
       console.error(
         "FETCH RIDER HISTORY ERROR:",
@@ -1185,10 +1244,85 @@ setRides(newRides);
                 <button className="rb-refresh" onClick={fetchRideHistory} disabled={historyLoading}>{historyLoading ? "Loading..." : "↻ Refresh"}</button>
               </div>
               <div className="rb-earn-grid">
-                <div className="rb-card rb-earn-card"><div><div className="rb-earn-label">Total Earnings</div><div className="rb-earn-value" style={{color:"#059669"}}>₹{totalEarnings.toFixed(2)}</div></div><div className="rb-icon-box">💰</div></div>
-                <div className="rb-card rb-earn-card"><div><div className="rb-earn-label">Completed Rides</div><div className="rb-earn-value">{completedRidesCount}</div></div><div className="rb-icon-box" style={{background:"#eff6ff"}}>🏁</div></div>
-                <div className="rb-card rb-earn-card"><div><div className="rb-earn-label">Average Per Ride</div><div className="rb-earn-value">₹{completedRidesCount > 0 ? (totalEarnings/completedRidesCount).toFixed(2) : "0.00"}</div></div><div className="rb-icon-box" style={{background:"#fffbeb"}}>📈</div></div>
-              </div>
+  <div className="rb-card rb-earn-card">
+    <div>
+      <div className="rb-earn-label">Total Earnings</div>
+      <div
+        className="rb-earn-value"
+        style={{ color: "#059669" }}
+      >
+        ₹{totalEarnings.toFixed(2)}
+      </div>
+    </div>
+    <div className="rb-icon-box">💰</div>
+  </div>
+
+  <div className="rb-card rb-earn-card">
+    <div>
+      <div className="rb-earn-label">Today's Earnings</div>
+      <div
+        className="rb-earn-value"
+        style={{ color: "#2563eb" }}
+      >
+        ₹{todayEarnings.toFixed(2)}
+      </div>
+    </div>
+    <div
+      className="rb-icon-box"
+      style={{ background: "#eff6ff" }}
+    >
+      📅
+    </div>
+  </div>
+
+  <div className="rb-card rb-earn-card">
+    <div>
+      <div className="rb-earn-label">Today's Rides</div>
+      <div className="rb-earn-value">
+        {todayRides}
+      </div>
+    </div>
+    <div
+      className="rb-icon-box"
+      style={{ background: "#f0fdf4" }}
+    >
+      🛵
+    </div>
+  </div>
+
+  <div className="rb-card rb-earn-card">
+    <div>
+      <div className="rb-earn-label">Completed Rides</div>
+      <div className="rb-earn-value">
+        {completedRidesCount}
+      </div>
+    </div>
+    <div
+      className="rb-icon-box"
+      style={{ background: "#eff6ff" }}
+    >
+      🏁
+    </div>
+  </div>
+
+  <div className="rb-card rb-earn-card">
+    <div>
+      <div className="rb-earn-label">Average Per Ride</div>
+      <div className="rb-earn-value">
+        ₹
+        {completedRidesCount > 0
+          ? (totalEarnings / completedRidesCount).toFixed(2)
+          : "0.00"}
+      </div>
+    </div>
+    <div
+      className="rb-icon-box"
+      style={{ background: "#fffbeb" }}
+    >
+      📈
+    </div>
+  </div>
+</div>
             </section>
 
             <section id="history" className="rb-section">

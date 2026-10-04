@@ -593,6 +593,14 @@ useEffect(() => {
                 setAcceptedRide(currentRide);
                 setRideStatus(currentRide.status);
 
+                if (currentRide.rider_rating) {
+    setRating(currentRide.rider_rating);
+    setReview(currentRide.rider_review || "");
+    setRatingSubmitted(true);
+} else {
+    setRatingSubmitted(false);
+}
+
                 setBookingId(
                     currentBookingId
                 );
