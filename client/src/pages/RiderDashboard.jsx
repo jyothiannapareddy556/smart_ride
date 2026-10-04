@@ -250,10 +250,20 @@ setRides(newRides);
   // =====================================================
 
   useEffect(() => {
-    if (user?.id) {
-      fetchRideHistory();
-    }
-  }, [user]);
+  if (!user?.id) return;
+
+  // Fetch immediately
+  fetchRideHistory();
+
+  // Keep rider history updated automatically
+  const historyInterval = setInterval(() => {
+    fetchRideHistory();
+  }, 5000);
+
+  return () => {
+    clearInterval(historyInterval);
+  };
+}, [user]);
 
   const fetchRideHistory = async () => {
     try {
@@ -950,6 +960,8 @@ setTodayEarnings(
         "Ride completed successfully"
       );
 
+      setIsOnline(false);
+setCurrentLocation("");
       await fetchRides();
 
       // Refresh earnings/history after completion

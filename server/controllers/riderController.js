@@ -581,11 +581,7 @@ const completeRide = async (req, res) => {
       UPDATE bookings
 
 SET
-  status = 'completed',
-  payment_status = CASE
-    WHEN payment_method = 'cash' THEN 'paid'
-    ELSE payment_status
-  END
+  status = 'completed'
 
 WHERE
   id = $1
@@ -605,16 +601,17 @@ WHERE
     }
 
     // Rider becomes available again
-    await client.query(
-      `
-      UPDATE users
+    // Rider must manually go online again after completing the ride
+await client.query(
+  `
+  UPDATE users
+  SET availability = 'offline',
+      current_location = NULL
+  WHERE id = $1
+  `,
+  [riderId]
+);
 
-      SET availability = 'available'
-
-      WHERE id = $1
-      `,
-      [riderId]
-    );
 
     await client.query("COMMIT");
     client.release();
