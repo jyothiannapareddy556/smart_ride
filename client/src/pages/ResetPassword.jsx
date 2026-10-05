@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:5000/api";
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -45,12 +49,12 @@ const ResetPassword = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "https://smart-ride-eeym.onrender.com/api/auth/reset-password",
-        {
-          token,
-          password,
-        }
-      );
+  `${API_URL}/auth/reset-password`,
+  {
+    token,
+    password,
+  }
+);
 
       setMessage(
         response.data.message ||

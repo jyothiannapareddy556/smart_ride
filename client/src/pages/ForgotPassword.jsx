@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:5000/api";
+
+  
 const ForgotPassword = () => {
   const navigate = useNavigate();
 
@@ -25,11 +30,11 @@ const ForgotPassword = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "https://smart-ride-eeym.onrender.com/api/auth/forgot-password",
-        {
-          email: email.trim(),
-        }
-      );
+  `${API_URL}/auth/forgot-password`,
+  {
+    email: email.trim(),
+  }
+);
 
       setMessage(
         response.data.message ||
