@@ -27,6 +27,7 @@ app.use(
       "http://localhost:3000",
       "http://localhost:3001",
       "https://smart-ride-eus5ltj0n-ride-back.vercel.app",
+      "https://smart-ride-xi.vercel.app",
     ],
     credentials: true,
   })
